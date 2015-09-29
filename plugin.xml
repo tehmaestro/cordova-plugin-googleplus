@@ -30,27 +30,27 @@
   <platform name="android">
 
     <!-- these give a lot of peeps trouble, esp on build.phonegap.com, so not using them -->
-    <!--<framework src="com.google.android.gms:play-services-plus:+" />-->
-    <!--<framework src="com.google.android.gms:play-services-identity:+" />-->
-    <dependency id="cordova-plugin-googleplayservices" />
+    <framework src="com.google.android.gms:play-services-plus:+" />
+    <framework src="com.google.android.gms:play-services-identity:+" />
+  <!--<dependency id="cordova-plugin-googleplayservices" />-->
 
-    <config-file target="res/xml/config.xml" parent="/*">
-      <feature name="GooglePlus">
-        <param name="android-package" value="nl.xservices.plugins.GooglePlus" />
-        <param name="onload" value="true" />
-      </feature>
-      <access origin="https://accounts.google.com/*" />
-    </config-file>
+  <config-file target="res/xml/config.xml" parent="/*">
+    <feature name="GooglePlus">
+      <param name="android-package" value="nl.xservices.plugins.GooglePlus" />
+      <param name="onload" value="true" />
+    </feature>
+    <access origin="https://accounts.google.com/*" />
+  </config-file>
 
-    <config-file target="AndroidManifest.xml" parent="/manifest">
-      <uses-permission android:name="android.permission.GET_ACCOUNTS" />
-      <uses-permission android:name="android.permission.USE_CREDENTIALS" />
-    </config-file>
+  <config-file target="AndroidManifest.xml" parent="/manifest">
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.USE_CREDENTIALS" />
+  </config-file>
 
-    <source-file src="src/android/GooglePlus.java" target-dir="src/nl/xservices/plugins"/>
-  </platform>
+  <source-file src="src/android/GooglePlus.java" target-dir="src/nl/xservices/plugins"/>
+</platform>
 
-  <!-- ios -->
+<!-- ios -->
   <platform name="ios">
 
     <config-file target="config.xml" parent="/*">
