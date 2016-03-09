@@ -41,9 +41,9 @@ To get your iOS API key, follow Step 1 of [this guide](https://developers.google
 This `GoogleService-Info.plist` file contains the `REVERSED_CLIENT_ID` you'll need during installation.
 
 ### Android
-To configure Android, follow Step 1 of [this guide](https://developers.google.com/+/quickstart/android)
+To configure Android, follow Step 2 (Get a configuration file) of [this guide](https://developers.google.com/identity/sign-in/android/start). Once Google Sign-In is enabled Google will automatically create necessary credentials in Developer Console. There is no need to add the generated google-services.json file into your cordova project.
 
-Make sure you execute the `keytool` steps as well or authentication will fail.
+Make sure you execute the `keytool` steps as explained [here](https://developers.google.com/drive/android/auth) or authentication will fail.
 
 ## 4. Installation (PhoneGap CLI / Cordova CLI)
 This plugin is compatible with [Cordova Plugman](https://github.com/apache/cordova-plugman), compatible with [PhoneGap 3.0 CLI](http://docs.phonegap.com/en/3.0.0/guide_cli_index.md.html#The%20Command-line%20Interface_add_features), here's how it works with the CLI (backup your project first!):
@@ -98,7 +98,7 @@ window.plugins.googleplus.isAvailable(
 window.plugins.googleplus.login(
     {
       'scopes': '... ', // optional space-separated list of scopes, the default is sufficient for login and basic profile info
-      'offline': true, // optional and required for Android only - if set to true the plugin will also return the OAuth access token, that can be used to sign in to some third party services that don't accept a Cross-client identity token (ex. Firebase)
+      'offline': true, // optional, used for Android only - if set to true the plugin will also return the OAuth access token ('oauthToken' param), that can be used to sign in to some third party services that don't accept a Cross-client identity token (ex. Firebase)
       'webApiKey': 'api of web app', // optional API key of your Web application from Credentials settings of your project - if you set it the returned idToken will allow sign in to services like Azure Mobile Services
       // there is no API key for Android; you app is wired to the Google+ API by listing your package name in the google dev console and signing your apk (which you have done in chapter 4)
     },
@@ -184,13 +184,21 @@ window.plugins.googleplus.disconnect(
 - Q: I can't get authentication to work on Android. And why is there no ANDROID API KEY?
 - A: On Android you need to execute the `keytool` steps, see the installation instructions for details.
 
+- Q: OMG $@#*! the Android build is failing
+- A: You need to have _Android Support Repository_ and _Android Support Library_ installed in the Android SDK manager. Make sure you're using a fairly up to date version of those.
+
 ## 8. Changelog
-4.0.3: On iOS `isAvailable` always returns try since that should be fine with the new Google SignIn framework. Re-added imageUrl to the result of SignIn on iOS.
-4.0.1: Login on Android would crash the app if `isAvailable` was invoked beforehand.
-4.0.0: Removed the need for `iosApiKey`, reverted Android to Google playservices framework for wider compatibility, documented scopes feature a bit.
-3.0.0: Using Google Sign-In for iOS, instead of Google+.
-1.1.0: Added `isAvailable`, for issue [#37](https://github.com/EddyVerbruggen/cordova-plugin-googleplus/issues/37)
-1.0.0: Initial version supporting iOS and Android
+- 4.0.8: Fix for Android 6 where it would crash while asking for permission. Thx #166!
+- 4.0.7: Re-added a missing framework for iOS. Thx #168!
+- 4.0.6: Updated iOS GoogleSignIn SDK to 2.4.0. Thx #153!
+- 4.0.5: Fixed a broken import on iOS
+- 4.0.4: Using framework tags again for Android.
+- 4.0.3: On iOS `isAvailable` always returns try since that should be fine with the new Google SignIn framework. Re-added imageUrl to the result of SignIn on iOS.
+- 4.0.1: Login on Android would crash the app if `isAvailable` was invoked beforehand.
+- 4.0.0: Removed the need for `iosApiKey`, reverted Android to Google playservices framework for wider compatibility, documented scopes feature a bit.
+- 3.0.0: Using Google Sign-In for iOS, instead of Google+.
+- 1.1.0: Added `isAvailable`, for issue [#37](https://github.com/EddyVerbruggen/cordova-plugin-googleplus/issues/37)
+- 1.0.0: Initial version supporting iOS and Android
 
 ## 9. License
 

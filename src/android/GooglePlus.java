@@ -1,10 +1,12 @@
 package nl.xservices.plugins;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
@@ -25,6 +27,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,6 +42,8 @@ public class GooglePlus extends CordovaPlugin implements ConnectionCallbacks, On
   public static final String ARGUMENT_WEB_KEY = "webApiKey";
   public static final String ARGUMENT_SCOPES = "scopes";
   public static final String ARGUMENT_OFFLINE_KEY = "offline";
+
+  private static final int REQUEST_GET_ACCOUNTS = 1;
 
   /**
    * Email for the google account that is being logged in
@@ -182,7 +187,7 @@ public class GooglePlus extends CordovaPlugin implements ConnectionCallbacks, On
         String token;
 
         try {
-          if (GooglePlus.this.webKey != null){
+          if (GooglePlus.this.webKey != null) {
             // Retrieve server side tokens
             scope = "audience:server:client_id:" + GooglePlus.this.webKey;
             token = GoogleAuthUtil.getToken(context, email, scope);
@@ -199,10 +204,13 @@ public class GooglePlus extends CordovaPlugin implements ConnectionCallbacks, On
             // the cache. This ensures a new token each time the user authenticates.
             GoogleAuthUtil.clearToken(context, token);
             result.put("oauthToken", token);
-          } else if(GooglePlus.this.requestOfflineToken) {
+          } else if (GooglePlus.this.requestOfflineToken) {
             // Retrieve the oauth token with offline mode
             scope = "oauth2:" + Scopes.PLUS_LOGIN;
             token = GoogleAuthUtil.getToken(context, email, scope);
+            // Since this is a short-lived one time token immediately remove it from
+            // the cache. This ensures a new token each time the user authenticates.
+            GoogleAuthUtil.clearToken(context, token);
             result.put("oauthToken", token);
           }
         }
@@ -229,6 +237,23 @@ public class GooglePlus extends CordovaPlugin implements ConnectionCallbacks, On
     });
   }
 
+  private Bundle cacheBundle;
+
+  public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
+    if (requestCode != REQUEST_GET_ACCOUNTS) {
+      return;
+    }
+
+    for (int i = 0; i < permissions.length; i++) {
+      if (permissions[i].equals(Manifest.permission.GET_ACCOUNTS) && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+        onConnected(cacheBundle);
+        return;
+      }
+    }
+
+    savedCallbackContext.error("Must allow Get Account permissions.");
+  }
+
   /**
    * onConnected is called when our Activity successfully connects to Google
    * Play services.  onConnected indicates that an account was selected on the
@@ -239,6 +264,23 @@ public class GooglePlus extends CordovaPlugin implements ConnectionCallbacks, On
   @Override
   public void onConnected(Bundle connectionHint) {
     final Person user = Plus.PeopleApi.getCurrentPerson(mGoogleApiClient);
+
+    // The new cordova permission API's are available since Cordova-Android 5,
+    // so if you're using API level 23 and want to deploy to Android 6,
+    // make sure you're building with Cordova-Android 5 or higher.
+    // .. it was either this or adding an Android Support library.
+    try {
+      Method hasPermissionMethod = cordova.getClass().getMethod("hasPermission", String.class);
+      if (hasPermissionMethod != null) {
+        if (!(Boolean) hasPermissionMethod.invoke(cordova, Manifest.permission.GET_ACCOUNTS)) {
+          Method requestPermissionMethod = cordova.getClass().getMethod("requestPermission", CordovaPlugin.class, int.class, String.class);
+          requestPermissionMethod.invoke(cordova, this, REQUEST_GET_ACCOUNTS, Manifest.permission.GET_ACCOUNTS);
+          return;
+        }
+      }
+    } catch (Exception ignore) {
+    }
+
     this.email = Plus.AccountApi.getAccountName(mGoogleApiClient);
     this.result = new JSONObject();
 
@@ -342,7 +384,7 @@ public class GooglePlus extends CordovaPlugin implements ConnectionCallbacks, On
   @Override
   public void onActivityResult(int requestCode, final int resultCode, final Intent intent) {
     super.onActivityResult(requestCode, resultCode, intent);
-    if(mGoogleApiClient == null) {
+    if (mGoogleApiClient == null) {
       buildGoogleApiClient();
     }
     if (!mGoogleApiClient.isConnected() && resultCode == Activity.RESULT_OK) {
